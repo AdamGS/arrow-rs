@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `arrow-ipc/src/reader.rs`."><title>reader.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="arrow_ipc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `arrow-ipc/src/reader.rs`."><title>reader.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-452d19225583af2a.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="arrow_ipc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0-nightly (89e2160c4 2023-12-27)" data-channel="nightly" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-6902632119e002ca.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1648,6 +1649,119 @@
 <a href="#1648" id="1648">1648</a>
 <a href="#1649" id="1649">1649</a>
 <a href="#1650" id="1650">1650</a>
+<a href="#1651" id="1651">1651</a>
+<a href="#1652" id="1652">1652</a>
+<a href="#1653" id="1653">1653</a>
+<a href="#1654" id="1654">1654</a>
+<a href="#1655" id="1655">1655</a>
+<a href="#1656" id="1656">1656</a>
+<a href="#1657" id="1657">1657</a>
+<a href="#1658" id="1658">1658</a>
+<a href="#1659" id="1659">1659</a>
+<a href="#1660" id="1660">1660</a>
+<a href="#1661" id="1661">1661</a>
+<a href="#1662" id="1662">1662</a>
+<a href="#1663" id="1663">1663</a>
+<a href="#1664" id="1664">1664</a>
+<a href="#1665" id="1665">1665</a>
+<a href="#1666" id="1666">1666</a>
+<a href="#1667" id="1667">1667</a>
+<a href="#1668" id="1668">1668</a>
+<a href="#1669" id="1669">1669</a>
+<a href="#1670" id="1670">1670</a>
+<a href="#1671" id="1671">1671</a>
+<a href="#1672" id="1672">1672</a>
+<a href="#1673" id="1673">1673</a>
+<a href="#1674" id="1674">1674</a>
+<a href="#1675" id="1675">1675</a>
+<a href="#1676" id="1676">1676</a>
+<a href="#1677" id="1677">1677</a>
+<a href="#1678" id="1678">1678</a>
+<a href="#1679" id="1679">1679</a>
+<a href="#1680" id="1680">1680</a>
+<a href="#1681" id="1681">1681</a>
+<a href="#1682" id="1682">1682</a>
+<a href="#1683" id="1683">1683</a>
+<a href="#1684" id="1684">1684</a>
+<a href="#1685" id="1685">1685</a>
+<a href="#1686" id="1686">1686</a>
+<a href="#1687" id="1687">1687</a>
+<a href="#1688" id="1688">1688</a>
+<a href="#1689" id="1689">1689</a>
+<a href="#1690" id="1690">1690</a>
+<a href="#1691" id="1691">1691</a>
+<a href="#1692" id="1692">1692</a>
+<a href="#1693" id="1693">1693</a>
+<a href="#1694" id="1694">1694</a>
+<a href="#1695" id="1695">1695</a>
+<a href="#1696" id="1696">1696</a>
+<a href="#1697" id="1697">1697</a>
+<a href="#1698" id="1698">1698</a>
+<a href="#1699" id="1699">1699</a>
+<a href="#1700" id="1700">1700</a>
+<a href="#1701" id="1701">1701</a>
+<a href="#1702" id="1702">1702</a>
+<a href="#1703" id="1703">1703</a>
+<a href="#1704" id="1704">1704</a>
+<a href="#1705" id="1705">1705</a>
+<a href="#1706" id="1706">1706</a>
+<a href="#1707" id="1707">1707</a>
+<a href="#1708" id="1708">1708</a>
+<a href="#1709" id="1709">1709</a>
+<a href="#1710" id="1710">1710</a>
+<a href="#1711" id="1711">1711</a>
+<a href="#1712" id="1712">1712</a>
+<a href="#1713" id="1713">1713</a>
+<a href="#1714" id="1714">1714</a>
+<a href="#1715" id="1715">1715</a>
+<a href="#1716" id="1716">1716</a>
+<a href="#1717" id="1717">1717</a>
+<a href="#1718" id="1718">1718</a>
+<a href="#1719" id="1719">1719</a>
+<a href="#1720" id="1720">1720</a>
+<a href="#1721" id="1721">1721</a>
+<a href="#1722" id="1722">1722</a>
+<a href="#1723" id="1723">1723</a>
+<a href="#1724" id="1724">1724</a>
+<a href="#1725" id="1725">1725</a>
+<a href="#1726" id="1726">1726</a>
+<a href="#1727" id="1727">1727</a>
+<a href="#1728" id="1728">1728</a>
+<a href="#1729" id="1729">1729</a>
+<a href="#1730" id="1730">1730</a>
+<a href="#1731" id="1731">1731</a>
+<a href="#1732" id="1732">1732</a>
+<a href="#1733" id="1733">1733</a>
+<a href="#1734" id="1734">1734</a>
+<a href="#1735" id="1735">1735</a>
+<a href="#1736" id="1736">1736</a>
+<a href="#1737" id="1737">1737</a>
+<a href="#1738" id="1738">1738</a>
+<a href="#1739" id="1739">1739</a>
+<a href="#1740" id="1740">1740</a>
+<a href="#1741" id="1741">1741</a>
+<a href="#1742" id="1742">1742</a>
+<a href="#1743" id="1743">1743</a>
+<a href="#1744" id="1744">1744</a>
+<a href="#1745" id="1745">1745</a>
+<a href="#1746" id="1746">1746</a>
+<a href="#1747" id="1747">1747</a>
+<a href="#1748" id="1748">1748</a>
+<a href="#1749" id="1749">1749</a>
+<a href="#1750" id="1750">1750</a>
+<a href="#1751" id="1751">1751</a>
+<a href="#1752" id="1752">1752</a>
+<a href="#1753" id="1753">1753</a>
+<a href="#1754" id="1754">1754</a>
+<a href="#1755" id="1755">1755</a>
+<a href="#1756" id="1756">1756</a>
+<a href="#1757" id="1757">1757</a>
+<a href="#1758" id="1758">1758</a>
+<a href="#1759" id="1759">1759</a>
+<a href="#1760" id="1760">1760</a>
+<a href="#1761" id="1761">1761</a>
+<a href="#1762" id="1762">1762</a>
+<a href="#1763" id="1763">1763</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1670,19 +1784,19 @@
 //! The `FileReader` and `StreamReader` have similar interfaces,
 //! however the `FileReader` expects a reader that supports `Seek`ing
 
-</span><span class="kw">use </span>flatbuffers::VectorIter;
+</span><span class="kw">use </span>flatbuffers::{VectorIter, VerifierOptions};
 <span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::fmt;
 <span class="kw">use </span>std::io::{BufReader, Read, Seek, SeekFrom};
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>arrow_array::<span class="kw-2">*</span>;
-<span class="kw">use </span>arrow_buffer::{Buffer, MutableBuffer};
+<span class="kw">use </span>arrow_buffer::{ArrowNativeType, Buffer, MutableBuffer};
 <span class="kw">use </span>arrow_data::ArrayData;
 <span class="kw">use </span>arrow_schema::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">crate</span>::compression::CompressionCodec;
-<span class="kw">use crate</span>::{FieldNode, MetadataVersion, CONTINUATION_MARKER};
+<span class="kw">use crate</span>::{Block, FieldNode, Message, MetadataVersion, CONTINUATION_MARKER};
 <span class="kw">use </span>DataType::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Read a buffer based on offset and length
@@ -2148,10 +2262,201 @@
     <span class="prelude-val">Ok</span>(())
 }
 
+<span class="doccomment">/// Read the data for a given block
+</span><span class="kw">fn </span>read_block&lt;R: Read + Seek&gt;(<span class="kw-2">mut </span>reader: R, block: <span class="kw-2">&amp;</span>Block) -&gt; <span class="prelude-ty">Result</span>&lt;Buffer, ArrowError&gt; {
+    reader.seek(SeekFrom::Start(block.offset() <span class="kw">as </span>u64))<span class="question-mark">?</span>;
+    <span class="kw">let </span>body_len = block.bodyLength().to_usize().unwrap();
+    <span class="kw">let </span>metadata_len = block.metaDataLength().to_usize().unwrap();
+    <span class="kw">let </span>total_len = body_len.checked_add(metadata_len).unwrap();
+
+    <span class="kw">let </span><span class="kw-2">mut </span>buf = MutableBuffer::from_len_zeroed(total_len);
+    reader.read_exact(<span class="kw-2">&amp;mut </span>buf)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(buf.into())
+}
+
+<span class="doccomment">/// Parse an encapsulated message
+///
+/// &lt;https://arrow.apache.org/docs/format/Columnar.html#encapsulated-message-format&gt;
+</span><span class="kw">fn </span>parse_message(buf: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;Message, ArrowError&gt; {
+    <span class="kw">let </span>buf = <span class="kw">match </span>buf[..<span class="number">4</span>] == CONTINUATION_MARKER {
+        <span class="bool-val">true </span>=&gt; <span class="kw-2">&amp;</span>buf[<span class="number">8</span>..],
+        <span class="bool-val">false </span>=&gt; <span class="kw-2">&amp;</span>buf[<span class="number">4</span>..],
+    };
+    <span class="kw">crate</span>::root_as_message(buf)
+        .map_err(|err| ArrowError::ParseError(<span class="macro">format!</span>(<span class="string">"Unable to get root as message: {err:?}"</span>)))
+}
+
+<span class="doccomment">/// Build an Arrow [`FileReader`] with custom options.
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>FileReaderBuilder {
+    <span class="doccomment">/// Optional projection for which columns to load (zero-based column indices)
+    </span>projection: <span class="prelude-ty">Option</span>&lt;Vec&lt;usize&gt;&gt;,
+    <span class="doccomment">/// Passed through to construct [`VerifierOptions`]
+    </span>max_footer_fb_tables: usize,
+    <span class="doccomment">/// Passed through to construct [`VerifierOptions`]
+    </span>max_footer_fb_depth: usize,
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>FileReaderBuilder {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>verifier_options = VerifierOptions::default();
+        <span class="self">Self </span>{
+            max_footer_fb_tables: verifier_options.max_tables,
+            max_footer_fb_depth: verifier_options.max_depth,
+            projection: <span class="prelude-val">None</span>,
+        }
+    }
+}
+
+<span class="kw">impl </span>FileReaderBuilder {
+    <span class="doccomment">/// Options for creating a new [`FileReader`].
+    ///
+    /// To convert a builder into a reader, call [`FileReaderBuilder::build`].
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::default()
+    }
+
+    <span class="doccomment">/// Optional projection for which columns to load (zero-based column indices).
+    </span><span class="kw">pub fn </span>with_projection(<span class="kw-2">mut </span><span class="self">self</span>, projection: Vec&lt;usize&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.projection = <span class="prelude-val">Some</span>(projection);
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Flatbuffers option for parsing the footer. Controls the max number of fields and
+    /// metadata key-value pairs that can be parsed from the schema of the footer.
+    ///
+    /// By default this is set to `1_000_000` which roughly translates to a schema with
+    /// no metadata key-value pairs but 499,999 fields.
+    ///
+    /// This default limit is enforced to protect against malicious files with a massive
+    /// amount of flatbuffer tables which could cause a denial of service attack.
+    ///
+    /// If you need to ingest a trusted file with a massive number of fields and/or
+    /// metadata key-value pairs and are facing the error `"Unable to get root as
+    /// footer: TooManyTables"` then increase this parameter as necessary.
+    </span><span class="kw">pub fn </span>with_max_footer_fb_tables(<span class="kw-2">mut </span><span class="self">self</span>, max_footer_fb_tables: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.max_footer_fb_tables = max_footer_fb_tables;
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Flatbuffers option for parsing the footer. Controls the max depth for schemas with
+    /// nested fields parsed from the footer.
+    ///
+    /// By default this is set to `64` which roughly translates to a schema with
+    /// a field nested 60 levels down through other struct fields.
+    ///
+    /// This default limit is enforced to protect against malicious files with a extremely
+    /// deep flatbuffer structure which could cause a denial of service attack.
+    ///
+    /// If you need to ingest a trusted file with a deeply nested field and are facing the
+    /// error `"Unable to get root as footer: DepthLimitReached"` then increase this
+    /// parameter as necessary.
+    </span><span class="kw">pub fn </span>with_max_footer_fb_depth(<span class="kw-2">mut </span><span class="self">self</span>, max_footer_fb_depth: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.max_footer_fb_depth = max_footer_fb_depth;
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Build [`FileReader`] with given reader.
+    </span><span class="kw">pub fn </span>build&lt;R: Read + Seek&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>reader: R) -&gt; <span class="prelude-ty">Result</span>&lt;FileReader&lt;R&gt;, ArrowError&gt; {
+        <span class="comment">// Space for ARROW_MAGIC (6 bytes) and length (4 bytes)
+        </span><span class="kw">let </span><span class="kw-2">mut </span>buffer = [<span class="number">0</span>; <span class="number">10</span>];
+        reader.seek(SeekFrom::End(-<span class="number">10</span>))<span class="question-mark">?</span>;
+        reader.read_exact(<span class="kw-2">&amp;mut </span>buffer)<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>buffer[<span class="number">4</span>..] != <span class="kw">super</span>::ARROW_MAGIC {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ArrowError::ParseError(
+                <span class="string">"Arrow file does not contain correct footer"</span>.to_string(),
+            ));
+        }
+
+        <span class="comment">// read footer length
+        </span><span class="kw">let </span>footer_len = i32::from_le_bytes(buffer[..<span class="number">4</span>].try_into().unwrap());
+
+        <span class="comment">// read footer
+        </span><span class="kw">let </span><span class="kw-2">mut </span>footer_data = <span class="macro">vec!</span>[<span class="number">0</span>; footer_len <span class="kw">as </span>usize];
+        reader.seek(SeekFrom::End(-<span class="number">10 </span>- footer_len <span class="kw">as </span>i64))<span class="question-mark">?</span>;
+        reader.read_exact(<span class="kw-2">&amp;mut </span>footer_data)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>verifier_options = VerifierOptions {
+            max_tables: <span class="self">self</span>.max_footer_fb_tables,
+            max_depth: <span class="self">self</span>.max_footer_fb_depth,
+            ..Default::default()
+        };
+        <span class="kw">let </span>footer = <span class="kw">crate</span>::root_as_footer_with_opts(<span class="kw-2">&amp;</span>verifier_options, <span class="kw-2">&amp;</span>footer_data[..]).map_err(
+            |err| ArrowError::ParseError(<span class="macro">format!</span>(<span class="string">"Unable to get root as footer: {err:?}"</span>)),
+        )<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>blocks = footer.recordBatches().ok_or_else(|| {
+            ArrowError::ParseError(<span class="string">"Unable to get record batches from IPC Footer"</span>.to_string())
+        })<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>total_blocks = blocks.len();
+
+        <span class="kw">let </span>ipc_schema = footer.schema().unwrap();
+        <span class="kw">let </span>schema = <span class="kw">crate</span>::convert::fb_to_schema(ipc_schema);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>custom_metadata = HashMap::new();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(fb_custom_metadata) = footer.custom_metadata() {
+            <span class="kw">for </span>kv <span class="kw">in </span>fb_custom_metadata.into_iter() {
+                custom_metadata.insert(
+                    kv.key().unwrap().to_string(),
+                    kv.value().unwrap().to_string(),
+                );
+            }
+        }
+
+        <span class="comment">// Create an array of optional dictionary value arrays, one per field.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>dictionaries_by_id = HashMap::new();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(dictionaries) = footer.dictionaries() {
+            <span class="kw">for </span>block <span class="kw">in </span>dictionaries {
+                <span class="kw">let </span>buf = read_block(<span class="kw-2">&amp;mut </span>reader, block)<span class="question-mark">?</span>;
+                <span class="kw">let </span>message = parse_message(<span class="kw-2">&amp;</span>buf)<span class="question-mark">?</span>;
+
+                <span class="kw">match </span>message.header_type() {
+                    <span class="kw">crate</span>::MessageHeader::DictionaryBatch =&gt; {
+                        <span class="kw">let </span>batch = message.header_as_dictionary_batch().unwrap();
+                        read_dictionary(
+                            <span class="kw-2">&amp;</span>buf.slice(block.metaDataLength() <span class="kw">as _</span>),
+                            batch,
+                            <span class="kw-2">&amp;</span>schema,
+                            <span class="kw-2">&amp;mut </span>dictionaries_by_id,
+                            <span class="kw-2">&amp;</span>message.version(),
+                        )<span class="question-mark">?</span>;
+                    }
+                    t =&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ArrowError::ParseError(<span class="macro">format!</span>(
+                            <span class="string">"Expecting DictionaryBatch in dictionary blocks, found {t:?}."
+                        </span>)));
+                    }
+                }
+            }
+        }
+        <span class="kw">let </span>projection = <span class="kw">match </span><span class="self">self</span>.projection {
+            <span class="prelude-val">Some</span>(projection_indices) =&gt; {
+                <span class="kw">let </span>schema = schema.project(<span class="kw-2">&amp;</span>projection_indices)<span class="question-mark">?</span>;
+                <span class="prelude-val">Some</span>((projection_indices, schema))
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        };
+
+        <span class="prelude-val">Ok</span>(FileReader {
+            reader,
+            schema: Arc::new(schema),
+            blocks: blocks.iter().copied().collect(),
+            current_block: <span class="number">0</span>,
+            total_blocks,
+            dictionaries_by_id,
+            metadata_version: footer.version(),
+            custom_metadata,
+            projection,
+        })
+    }
+}
+
 <span class="doccomment">/// Arrow File reader
 </span><span class="kw">pub struct </span>FileReader&lt;R: Read + Seek&gt; {
     <span class="doccomment">/// Buffered file reader that supports reading and seeking
-    </span>reader: BufReader&lt;R&gt;,
+    </span>reader: R,
 
     <span class="doccomment">/// The schema that is read from the file header
     </span>schema: SchemaRef,
@@ -2185,7 +2490,6 @@
 <span class="kw">impl</span>&lt;R: Read + Seek&gt; fmt::Debug <span class="kw">for </span>FileReader&lt;R&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::result::Result&lt;(), fmt::Error&gt; {
         f.debug_struct(<span class="string">"FileReader&lt;R&gt;"</span>)
-            .field(<span class="string">"reader"</span>, <span class="kw-2">&amp;</span><span class="string">"BufReader&lt;..&gt;"</span>)
             .field(<span class="string">"schema"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.schema)
             .field(<span class="string">"blocks"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.blocks)
             .field(<span class="string">"current_block"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.current_block)
@@ -2193,132 +2497,20 @@
             .field(<span class="string">"dictionaries_by_id"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.dictionaries_by_id)
             .field(<span class="string">"metadata_version"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.metadata_version)
             .field(<span class="string">"projection"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.projection)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
 <span class="kw">impl</span>&lt;R: Read + Seek&gt; FileReader&lt;R&gt; {
     <span class="doccomment">/// Try to create a new file reader
     ///
-    /// Returns errors if the file does not meet the Arrow Format header and footer
-    /// requirements
+    /// Returns errors if the file does not meet the Arrow Format footer requirements
     </span><span class="kw">pub fn </span>try_new(reader: R, projection: <span class="prelude-ty">Option</span>&lt;Vec&lt;usize&gt;&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ArrowError&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>reader = BufReader::new(reader);
-        <span class="comment">// check if header and footer contain correct magic bytes
-        </span><span class="kw">let </span><span class="kw-2">mut </span>magic_buffer: [u8; <span class="number">6</span>] = [<span class="number">0</span>; <span class="number">6</span>];
-        reader.read_exact(<span class="kw-2">&amp;mut </span>magic_buffer)<span class="question-mark">?</span>;
-        <span class="kw">if </span>magic_buffer != <span class="kw">super</span>::ARROW_MAGIC {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ArrowError::ParseError(
-                <span class="string">"Arrow file does not contain correct header"</span>.to_string(),
-            ));
-        }
-        reader.seek(SeekFrom::End(-<span class="number">6</span>))<span class="question-mark">?</span>;
-        reader.read_exact(<span class="kw-2">&amp;mut </span>magic_buffer)<span class="question-mark">?</span>;
-        <span class="kw">if </span>magic_buffer != <span class="kw">super</span>::ARROW_MAGIC {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ArrowError::ParseError(
-                <span class="string">"Arrow file does not contain correct footer"</span>.to_string(),
-            ));
-        }
-        <span class="comment">// read footer length
-        </span><span class="kw">let </span><span class="kw-2">mut </span>footer_size: [u8; <span class="number">4</span>] = [<span class="number">0</span>; <span class="number">4</span>];
-        reader.seek(SeekFrom::End(-<span class="number">10</span>))<span class="question-mark">?</span>;
-        reader.read_exact(<span class="kw-2">&amp;mut </span>footer_size)<span class="question-mark">?</span>;
-        <span class="kw">let </span>footer_len = i32::from_le_bytes(footer_size);
-
-        <span class="comment">// read footer
-        </span><span class="kw">let </span><span class="kw-2">mut </span>footer_data = <span class="macro">vec!</span>[<span class="number">0</span>; footer_len <span class="kw">as </span>usize];
-        reader.seek(SeekFrom::End(-<span class="number">10 </span>- footer_len <span class="kw">as </span>i64))<span class="question-mark">?</span>;
-        reader.read_exact(<span class="kw-2">&amp;mut </span>footer_data)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>footer = <span class="kw">crate</span>::root_as_footer(<span class="kw-2">&amp;</span>footer_data[..]).map_err(|err| {
-            ArrowError::ParseError(<span class="macro">format!</span>(<span class="string">"Unable to get root as footer: {err:?}"</span>))
-        })<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>blocks = footer.recordBatches().ok_or_else(|| {
-            ArrowError::ParseError(<span class="string">"Unable to get record batches from IPC Footer"</span>.to_string())
-        })<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>total_blocks = blocks.len();
-
-        <span class="kw">let </span>ipc_schema = footer.schema().unwrap();
-        <span class="kw">let </span>schema = <span class="kw">crate</span>::convert::fb_to_schema(ipc_schema);
-
-        <span class="kw">let </span><span class="kw-2">mut </span>custom_metadata = HashMap::new();
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(fb_custom_metadata) = footer.custom_metadata() {
-            <span class="kw">for </span>kv <span class="kw">in </span>fb_custom_metadata.into_iter() {
-                custom_metadata.insert(
-                    kv.key().unwrap().to_string(),
-                    kv.value().unwrap().to_string(),
-                );
-            }
-        }
-
-        <span class="comment">// Create an array of optional dictionary value arrays, one per field.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>dictionaries_by_id = HashMap::new();
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(dictionaries) = footer.dictionaries() {
-            <span class="kw">for </span>block <span class="kw">in </span>dictionaries {
-                <span class="comment">// read length from end of offset
-                </span><span class="kw">let </span><span class="kw-2">mut </span>message_size: [u8; <span class="number">4</span>] = [<span class="number">0</span>; <span class="number">4</span>];
-                reader.seek(SeekFrom::Start(block.offset() <span class="kw">as </span>u64))<span class="question-mark">?</span>;
-                reader.read_exact(<span class="kw-2">&amp;mut </span>message_size)<span class="question-mark">?</span>;
-                <span class="kw">if </span>message_size == CONTINUATION_MARKER {
-                    reader.read_exact(<span class="kw-2">&amp;mut </span>message_size)<span class="question-mark">?</span>;
-                }
-                <span class="kw">let </span>footer_len = i32::from_le_bytes(message_size);
-                <span class="kw">let </span><span class="kw-2">mut </span>block_data = <span class="macro">vec!</span>[<span class="number">0</span>; footer_len <span class="kw">as </span>usize];
-
-                reader.read_exact(<span class="kw-2">&amp;mut </span>block_data)<span class="question-mark">?</span>;
-
-                <span class="kw">let </span>message = <span class="kw">crate</span>::root_as_message(<span class="kw-2">&amp;</span>block_data[..]).map_err(|err| {
-                    ArrowError::ParseError(<span class="macro">format!</span>(<span class="string">"Unable to get root as message: {err:?}"</span>))
-                })<span class="question-mark">?</span>;
-
-                <span class="kw">match </span>message.header_type() {
-                    <span class="kw">crate</span>::MessageHeader::DictionaryBatch =&gt; {
-                        <span class="kw">let </span>batch = message.header_as_dictionary_batch().unwrap();
-
-                        <span class="comment">// read the block that makes up the dictionary batch into a buffer
-                        </span><span class="kw">let </span><span class="kw-2">mut </span>buf = MutableBuffer::from_len_zeroed(message.bodyLength() <span class="kw">as </span>usize);
-                        reader.seek(SeekFrom::Start(
-                            block.offset() <span class="kw">as </span>u64 + block.metaDataLength() <span class="kw">as </span>u64,
-                        ))<span class="question-mark">?</span>;
-                        reader.read_exact(<span class="kw-2">&amp;mut </span>buf)<span class="question-mark">?</span>;
-
-                        read_dictionary(
-                            <span class="kw-2">&amp;</span>buf.into(),
-                            batch,
-                            <span class="kw-2">&amp;</span>schema,
-                            <span class="kw-2">&amp;mut </span>dictionaries_by_id,
-                            <span class="kw-2">&amp;</span>message.version(),
-                        )<span class="question-mark">?</span>;
-                    }
-                    t =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(ArrowError::ParseError(<span class="macro">format!</span>(
-                            <span class="string">"Expecting DictionaryBatch in dictionary blocks, found {t:?}."
-                        </span>)));
-                    }
-                }
-            }
-        }
-        <span class="kw">let </span>projection = <span class="kw">match </span>projection {
-            <span class="prelude-val">Some</span>(projection_indices) =&gt; {
-                <span class="kw">let </span>schema = schema.project(<span class="kw-2">&amp;</span>projection_indices)<span class="question-mark">?</span>;
-                <span class="prelude-val">Some</span>((projection_indices, schema))
-            }
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-        };
-
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            reader,
-            schema: Arc::new(schema),
-            blocks: blocks.iter().copied().collect(),
-            current_block: <span class="number">0</span>,
-            total_blocks,
-            dictionaries_by_id,
-            metadata_version: footer.version(),
-            custom_metadata,
+        <span class="kw">let </span>builder = FileReaderBuilder {
             projection,
-        })
+            ..Default::default()
+        };
+        builder.build(reader)
     }
 
     <span class="doccomment">/// Return user defined customized metadata
@@ -2352,27 +2544,15 @@
     }
 
     <span class="kw">fn </span>maybe_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;RecordBatch&gt;, ArrowError&gt; {
-        <span class="kw">let </span>block = <span class="self">self</span>.blocks[<span class="self">self</span>.current_block];
+        <span class="kw">let </span>block = <span class="kw-2">&amp;</span><span class="self">self</span>.blocks[<span class="self">self</span>.current_block];
         <span class="self">self</span>.current_block += <span class="number">1</span>;
 
         <span class="comment">// read length
-        </span><span class="self">self</span>.reader.seek(SeekFrom::Start(block.offset() <span class="kw">as </span>u64))<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>meta_buf = [<span class="number">0</span>; <span class="number">4</span>];
-        <span class="self">self</span>.reader.read_exact(<span class="kw-2">&amp;mut </span>meta_buf)<span class="question-mark">?</span>;
-        <span class="kw">if </span>meta_buf == CONTINUATION_MARKER {
-            <span class="comment">// continuation marker encountered, read message next
-            </span><span class="self">self</span>.reader.read_exact(<span class="kw-2">&amp;mut </span>meta_buf)<span class="question-mark">?</span>;
-        }
-        <span class="kw">let </span>meta_len = i32::from_le_bytes(meta_buf);
-
-        <span class="kw">let </span><span class="kw-2">mut </span>block_data = <span class="macro">vec!</span>[<span class="number">0</span>; meta_len <span class="kw">as </span>usize];
-        <span class="self">self</span>.reader.read_exact(<span class="kw-2">&amp;mut </span>block_data)<span class="question-mark">?</span>;
-        <span class="kw">let </span>message = <span class="kw">crate</span>::root_as_message(<span class="kw-2">&amp;</span>block_data[..]).map_err(|err| {
-            ArrowError::ParseError(<span class="macro">format!</span>(<span class="string">"Unable to get root as footer: {err:?}"</span>))
-        })<span class="question-mark">?</span>;
+        </span><span class="kw">let </span>buffer = read_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>.reader, block)<span class="question-mark">?</span>;
+        <span class="kw">let </span>message = parse_message(<span class="kw-2">&amp;</span>buffer)<span class="question-mark">?</span>;
 
         <span class="comment">// some old test data's footer metadata is not set, so we account for that
-        </span><span class="kw">if </span><span class="self">self</span>.metadata_version != <span class="kw">crate</span>::MetadataVersion::V1
+        </span><span class="kw">if </span><span class="self">self</span>.metadata_version != MetadataVersion::V1
             &amp;&amp; message.version() != <span class="self">self</span>.metadata_version
         {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ArrowError::IpcError(
@@ -2389,14 +2569,8 @@
                     ArrowError::IpcError(<span class="string">"Unable to read IPC message as record batch"</span>.to_string())
                 })<span class="question-mark">?</span>;
                 <span class="comment">// read the block that makes up the record batch into a buffer
-                </span><span class="kw">let </span><span class="kw-2">mut </span>buf = MutableBuffer::from_len_zeroed(message.bodyLength() <span class="kw">as </span>usize);
-                <span class="self">self</span>.reader.seek(SeekFrom::Start(
-                    block.offset() <span class="kw">as </span>u64 + block.metaDataLength() <span class="kw">as </span>u64,
-                ))<span class="question-mark">?</span>;
-                <span class="self">self</span>.reader.read_exact(<span class="kw-2">&amp;mut </span>buf)<span class="question-mark">?</span>;
-
-                read_record_batch(
-                    <span class="kw-2">&amp;</span>buf.into(),
+                </span>read_record_batch(
+                    <span class="kw-2">&amp;</span>buffer.slice(block.metaDataLength() <span class="kw">as _</span>),
                     batch,
                     <span class="self">self</span>.schema(),
                     <span class="kw-2">&amp;</span><span class="self">self</span>.dictionaries_by_id,
@@ -2416,14 +2590,14 @@
     ///
     /// It is inadvisable to directly read from the underlying reader.
     </span><span class="kw">pub fn </span>get_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>R {
-        <span class="self">self</span>.reader.get_ref()
+        <span class="kw-2">&amp;</span><span class="self">self</span>.reader
     }
 
     <span class="doccomment">/// Gets a mutable reference to the underlying reader.
     ///
     /// It is inadvisable to directly read from the underlying reader.
     </span><span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>R {
-        <span class="self">self</span>.reader.get_mut()
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.reader
     }
 }
 
@@ -3296,6 +3470,59 @@
         )
         .unwrap();
         <span class="macro">assert_eq!</span>(batch, roundtrip);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_file_with_massive_column_count() {
+        <span class="comment">// 499_999 is upper limit for default settings (1_000_000)
+        </span><span class="kw">let </span>limit = <span class="number">600_000</span>;
+
+        <span class="kw">let </span>fields = (<span class="number">0</span>..limit)
+            .map(|i| Field::new(<span class="macro">format!</span>(<span class="string">"{i}"</span>), DataType::Boolean, <span class="bool-val">false</span>))
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        <span class="kw">let </span>schema = Arc::new(Schema::new(fields));
+        <span class="kw">let </span>batch = RecordBatch::new_empty(schema);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>buf = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>writer = <span class="kw">crate</span>::writer::FileWriter::try_new(<span class="kw-2">&amp;mut </span>buf, <span class="kw-2">&amp;</span>batch.schema()).unwrap();
+        writer.write(<span class="kw-2">&amp;</span>batch).unwrap();
+        writer.finish().unwrap();
+        drop(writer);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>reader = FileReaderBuilder::new()
+            .with_max_footer_fb_tables(<span class="number">1_500_000</span>)
+            .build(std::io::Cursor::new(buf))
+            .unwrap();
+        <span class="kw">let </span>roundtrip_batch = reader.next().unwrap().unwrap();
+
+        <span class="macro">assert_eq!</span>(batch, roundtrip_batch);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_file_with_deeply_nested_columns() {
+        <span class="comment">// 60 is upper limit for default settings (64)
+        </span><span class="kw">let </span>limit = <span class="number">61</span>;
+
+        <span class="kw">let </span>fields = (<span class="number">0</span>..limit).fold(
+            <span class="macro">vec!</span>[Field::new(<span class="string">"leaf"</span>, DataType::Boolean, <span class="bool-val">false</span>)],
+            |field, index| <span class="macro">vec!</span>[Field::new_struct(<span class="macro">format!</span>(<span class="string">"{index}"</span>), field, <span class="bool-val">false</span>)],
+        );
+        <span class="kw">let </span>schema = Arc::new(Schema::new(fields));
+        <span class="kw">let </span>batch = RecordBatch::new_empty(schema);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>buf = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>writer = <span class="kw">crate</span>::writer::FileWriter::try_new(<span class="kw-2">&amp;mut </span>buf, <span class="kw-2">&amp;</span>batch.schema()).unwrap();
+        writer.write(<span class="kw-2">&amp;</span>batch).unwrap();
+        writer.finish().unwrap();
+        drop(writer);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>reader = FileReaderBuilder::new()
+            .with_max_footer_fb_depth(<span class="number">65</span>)
+            .build(std::io::Cursor::new(buf))
+            .unwrap();
+        <span class="kw">let </span>roundtrip_batch = reader.next().unwrap().unwrap();
+
+        <span class="macro">assert_eq!</span>(batch, roundtrip_batch);
     }
 }
 </code></pre></div></section></main></body></html>
